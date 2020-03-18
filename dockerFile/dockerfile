@@ -1,0 +1,27 @@
+FROM ubuntu:18.04
+
+# Working Directory
+WORKDIR /root
+
+# Install supervisor
+RUN apt-get update && apt-get -y install supervisor
+
+# Copy xampp installer inside image
+COPY ./xampp-linux-x64-7.4.3-0-installer.run ./xampp.run
+
+# Install xampp
+RUN chmod +x ./xampp.run
+RUN ./xampp.run --mode unattended
+
+# Copy mutillidae inside image on deploy directory
+COPY ./mutillidae/ /opt/lampp/htdocs/
+
+# Configure supervisord
+RUN echo "[supervisord]" > /etc/supervisor/conf.d/supervisord.conf
+RUN echo "nodaemon=true" >> /etc/supervisor/conf.d/supervisord.conf
+RUN echo "[program:xampp]" >> /etc/supervisor/conf.d/supervisord.conf
+RUN echo "command=/bin/bash -c '/opt/lampp/xampp start'" >> /etc/supervisor/conf.d/supervisord.conf
+
+EXPOSE 80 443 3306
+
+CMD ["/usr/bin/supervisord"]
